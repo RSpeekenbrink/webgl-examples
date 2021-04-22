@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>GL001 - Plane Wave</title>
+    <style>
+        body {
+            margin: 0;
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+<div id="canvas"></div>
+<script src="js/three.js"></script>
+<script>
+    let renderer, scene, camera, plane;
+
+    const planeDefinition = 100,
+        background = '#333333',
+        planeSize = 1245000;
+
+    window.onload = function() {
+        init();
+        render();
+    }
+
+    function init() {
+        renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setPixelRatio((window.devicePixelRatio) ? window.devicePixelRatio : 1);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(background, 1);
+        document.getElementById('canvas').appendChild(renderer.domElement);
+
+        scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(background, 1, 300000);
+
+        camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 1, 400000);
+        camera.position.z = 10000;
+        camera.position.y = 10000;
+        scene.add(camera);
+
+        var geom = new THREE.PlaneGeometry(planeSize, planeSize, planeDefinition, planeDefinition);
+
+        var mat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            wireframe: true,
+        });
+
+        plane = new THREE.Mesh(geom, mat);
+        plane.rotation.x -= Math.PI * .5;
+        scene.add(plane);
+
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function render() {
+        requestAnimationFrame(render);
+
+        camera.lookAt(new THREE.Vector3(0, 8000, 0));
+
+        const time =  performance.now() * .001 ;
+        const positions = plane.geometry.attributes.position;
+        let vec3 = new THREE.Vector3();
+
+        for ( var i = 0, l = positions.count; i < l; i ++ ) {
+            vec3.fromBufferAttribute(positions, i);
+            vec3.sub(new THREE.Vector3(0,0,0));
+
+            let waveSize = 4500;
+            let z = Math.sin(vec3.length() /- waveSize + (time)) * (waveSize * .7);
+
+            positions.setZ(i, z);
+        }
+
+        positions.needsUpdate = true;
+
+        renderer.clear();
+
+        renderer.render( scene, camera )
+    };
+</script>
+</body>
+</html>
